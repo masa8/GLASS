@@ -3,6 +3,8 @@
 
 GLASS is an anomaly detection method that learns only normal images and then generates gradient-ascent–controlled pseudo anomalies at both the feature level (Global) and the image level (Local), enabling the model to learn and detect even subtle, hard-to-distinguish defects.
 
+## Scripts
+ - shell/download.sh # Download Dataset and Results(.pth)
 
 ## Runtime Environment
 - Google Colab 
