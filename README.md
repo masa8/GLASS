@@ -18,7 +18,7 @@ GLASS is an anomaly detection method that learns only normal images and then gen
  Step.3 !tar -xf dtd-r1.0.1.tar.gz  
  Step.4 !pip install -U "numpy<2" "imgaug==0.4.0".  
  Step.5 Put the dataset as follows:  
-         - /content/GLASS/datasets/mvtec/screw/test/good 
+         - /content/GLASS/datasets/mvtec/screw/test/good  
          - /content/GLASS/datasets/mvtec/screw/test/not-good  
          - /content/GLASS/datasets/mvtec/screw/train/good  
          - /content/GLASS/datasets/mvtec/screw/train/not-good  
