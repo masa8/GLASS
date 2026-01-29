@@ -24,7 +24,7 @@ python main.py \
     --noise 0.015 \
     --radius 0.75 \
     --p 0.5 \
-    --step 20 \
+    --step 5 \
     --limit 392 \
   dataset \
     --distribution 0 \
