@@ -11,21 +11,8 @@ import os
 import glob
 
 _CLASSNAMES = [
-    "carpet",
-    "grid",
-    "leather",
-    "tile",
-    "wood",
-    "bottle",
-    "cable",
-    "capsule",
-    "hazelnut",
-    "metal_nut",
-    "pill",
+
     "screw",
-    "toothbrush",
-    "transistor",
-    "zipper",
 ]
 
 IMAGENET_MEAN = [0.485, 0.456, 0.406]
@@ -45,7 +32,7 @@ class MVTecDataset(torch.utils.data.Dataset):
     def __init__(
             self,
             source,
-            anomaly_source_path='/root/dataset/dtd/images',
+            anomaly_source_path='/content/dtd/images',
             dataset_name='mvtec',
             classname='leather',
             resize=288,
@@ -232,8 +219,11 @@ class MVTecDataset(torch.utils.data.Dataset):
 
             if self.split == DatasetSplit.TEST and anomaly != "good":
                 anomaly_mask_path = os.path.join(maskpath, anomaly)
-                anomaly_mask_files = sorted(os.listdir(anomaly_mask_path))
-                maskpaths_per_class[self.classname][anomaly] = [os.path.join(anomaly_mask_path, x) for x in anomaly_mask_files]
+                if os.path.isdir(anomaly_mask_path):
+                    anomaly_mask_files = sorted(os.listdir(anomaly_mask_path))
+                    maskpaths_per_class[self.classname][anomaly] = [os.path.join(anomaly_mask_path, x) for x in anomaly_mask_files]
+                else:
+                    maskpaths_per_class[self.classname][anomaly] = None
             else:
                 maskpaths_per_class[self.classname]["good"] = None
 
@@ -243,7 +233,11 @@ class MVTecDataset(torch.utils.data.Dataset):
                 for i, image_path in enumerate(imgpaths_per_class[classname][anomaly]):
                     data_tuple = [classname, anomaly, image_path]
                     if self.split == DatasetSplit.TEST and anomaly != "good":
-                        data_tuple.append(maskpaths_per_class[classname][anomaly][i])
+                        m = maskpaths_per_class[classname].get(anomaly, None)
+                        if m is not None:
+                            data_tuple.append(m[i])
+                        else:
+                            data_tuple.append(None)
                     else:
                         data_tuple.append(None)
                     data_to_iterate.append(data_tuple)
