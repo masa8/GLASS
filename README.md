@@ -10,7 +10,7 @@ GLASS is an anomaly detection method that learns only normal images and then gen
   - System RAM 9.6GB
   - Disk 40.9 GB
 
-## How to train and test
+## How to Train and Test
  Step.1 !git clone https://github.com/masa8/GLASS.git
  Step.2 !wget https://www.robots.ox.ac.uk/~vgg/data/dtd/download/dtd-r1.0.1.tar.gz
  Step.3 !tar -xf dtd-r1.0.1.tar.gz
@@ -26,6 +26,12 @@ GLASS is an anomaly detection method that learns only normal images and then gen
  - Model: GLASS/results/models/backbone_0/ckpt_best_*.pth
  - ROC for test: GLASS/results/roc_curves/mvtec_screw_image_roc.png
  - Test Results: GLASS/results/test_results/mvtec_screw/all_test_results.csv
+
+## How to run test-only inference
+ Step.1 Put ckpt_best_*.pth in GLASS/results/models/backbone_0/mvtec_screw/
+ Step.2 Update -test option
+  - When the `-test` option in run-mvtec.sh is set to a value other than `ckpt`, the script skips training and runs inference on the test set.
+
  
 ## License
 The code and dataset in this repository are licensed under the [MIT license](https://github.com/cqylunlun/GLASS?tab=MIT-1-ov-file/).
