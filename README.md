@@ -13,16 +13,16 @@ GLASS is an anomaly detection method that learns only normal images and then gen
   - Disk 40.9 GB
 
 ## How to Train and Test
- Step.1 !git clone https://github.com/masa8/GLASS.git
- Step.2 !wget https://www.robots.ox.ac.uk/~vgg/data/dtd/download/dtd-r1.0.1.tar.gz
- Step.3 !tar -xf dtd-r1.0.1.tar.gz
- Step.4 !pip install -U "numpy<2" "imgaug==0.4.0"
- Step.5 Put the dataset as follows:
-         /content/GLASS/datasets/mvtec/screw/test/good
-         /content/GLASS/datasets/mvtec/screw/test/not-good
-         /content/GLASS/datasets/mvtec/screw/train/good
-         /content/GLASS/datasets/mvtec/screw/train/not-good
- Step.6 !cd GLASS/shell && bash run-mvtec.sh 
+ Step.1 !git clone https://github.com/masa8/GLASS.git   
+ Step.2 !wget https://www.robots.ox.ac.uk/~vgg/data/dtd/download/dtd-r1.0.1.tar.gz. 
+ Step.3 !tar -xf dtd-r1.0.1.tar.gz. 
+ Step.4 !pip install -U "numpy<2" "imgaug==0.4.0". 
+ Step.5 Put the dataset as follows:  
+         /content/GLASS/datasets/mvtec/screw/test/good 
+         /content/GLASS/datasets/mvtec/screw/test/not-good  
+         /content/GLASS/datasets/mvtec/screw/train/good  
+         /content/GLASS/datasets/mvtec/screw/train/not-good  
+ Step.6 !cd GLASS/shell && bash run-mvtec.sh   
 
 ## Results
  - Model: GLASS/results/models/backbone_0/ckpt_best_*.pth
