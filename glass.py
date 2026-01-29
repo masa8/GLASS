@@ -497,6 +497,11 @@ class GLASS(torch.nn.Module):
         image_auroc = image_scores["auroc"]
         image_ap = image_scores["ap"]
 
+        # Plot and save ROC curve for evaluation (test) phase
+        if path == 'eval':
+            roc_save_path = f'./results/roc_curves/{name}_image_roc.png'
+            metrics.plot_roc_curve(scores, labels_gt, roc_save_path, dataset_name=name)
+
         if len(masks_gt) > 0:
             segmentations = np.array(segmentations)
             pixel_scores = metrics.compute_pixelwise_retrieval_metrics(segmentations, masks_gt, path)
@@ -505,6 +510,12 @@ class GLASS(torch.nn.Module):
             if path == 'eval':
                 try:
                     pixel_pro = metrics.compute_pro(np.squeeze(np.array(masks_gt)), segmentations)
+                    # Plot pixel-level ROC curve
+                    pixel_roc_save_path = f'./results/roc_curves/{name}_pixel_roc.png'
+                    flat_segmentations = segmentations.ravel()
+                    flat_masks_gt = np.array(masks_gt).ravel()
+                    metrics.plot_roc_curve(flat_segmentations, flat_masks_gt.astype(int), 
+                                         pixel_roc_save_path, dataset_name=f'{name} (Pixel-level)')
                 except:
                     pixel_pro = 0.
             else:

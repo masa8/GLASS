@@ -4,6 +4,8 @@ from skimage import measure
 import cv2
 import numpy as np
 import pandas as pd
+import matplotlib.pyplot as plt
+import os
 
 
 def compute_best_pr_re(anomaly_ground_truth_labels, anomaly_prediction_weights):
@@ -29,6 +31,40 @@ def compute_imagewise_retrieval_metrics(anomaly_prediction_weights, anomaly_grou
     auroc = metrics.roc_auc_score(anomaly_ground_truth_labels, anomaly_prediction_weights)
     ap = 0. if path == 'training' else metrics.average_precision_score(anomaly_ground_truth_labels, anomaly_prediction_weights)
     return {"auroc": auroc, "ap": ap}
+
+
+def plot_roc_curve(anomaly_prediction_weights, anomaly_ground_truth_labels, save_path, dataset_name=''):
+    """
+    Plot ROC curve and save as PNG.
+    
+    Args:
+        anomaly_prediction_weights: Predicted anomaly scores
+        anomaly_ground_truth_labels: Ground truth labels (0=normal, 1=anomaly)
+        save_path: Path to save the PNG file
+        dataset_name: Name of the dataset for the title
+    """
+    # Calculate ROC curve
+    fpr, tpr, thresholds = metrics.roc_curve(anomaly_ground_truth_labels, anomaly_prediction_weights)
+    auroc = metrics.roc_auc_score(anomaly_ground_truth_labels, anomaly_prediction_weights)
+    
+    # Create plot
+    plt.figure(figsize=(8, 6))
+    plt.plot(fpr, tpr, color='darkorange', lw=2, label=f'ROC curve (AUC = {auroc:.4f})')
+    plt.plot([0, 1], [0, 1], color='navy', lw=2, linestyle='--', label='Random (AUC = 0.5)')
+    plt.xlim([0.0, 1.0])
+    plt.ylim([0.0, 1.05])
+    plt.xlabel('False Positive Rate', fontsize=12)
+    plt.ylabel('True Positive Rate', fontsize=12)
+    plt.title(f'ROC Curve - {dataset_name}' if dataset_name else 'ROC Curve', fontsize=14)
+    plt.legend(loc="lower right", fontsize=10)
+    plt.grid(True, alpha=0.3)
+    
+    # Save figure
+    os.makedirs(os.path.dirname(save_path), exist_ok=True)
+    plt.savefig(save_path, dpi=150, bbox_inches='tight')
+    plt.close()
+    
+    return auroc
 
 
 def compute_pixelwise_retrieval_metrics(anomaly_segmentations, ground_truth_masks, path='train'):
