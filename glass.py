@@ -133,6 +133,57 @@ class GLASS(torch.nn.Module):
         os.makedirs(self.tb_dir, exist_ok=True)
         self.logger = TBWrapper(self.tb_dir)
 
+    def _save_test_results(self, scores, labels_gt, img_paths, name, threshold=0.5):
+        """Save all test results to CSV."""
+        import csv
+        
+        # Convert scores to predictions (threshold-based)
+        predictions = (scores > threshold).astype(int)
+        
+        # Collect all test results
+        all_results = []
+        misclassified_count = 0
+        for i, (pred, label, score, path) in enumerate(zip(predictions, labels_gt, scores, img_paths)):
+            is_correct = (pred == label)
+            if not is_correct:
+                misclassified_count += 1
+            
+            all_results.append({
+                'index': i,
+                'image_path': path,
+                'true_label': 'anomaly' if label == 1 else 'normal',
+                'predicted_label': 'anomaly' if pred == 1 else 'normal',
+                'anomaly_score': float(score),
+                'is_correct': is_correct
+            })
+        
+        # Save all results to CSV
+        save_dir = f'./results/test_results/{name}'
+        os.makedirs(save_dir, exist_ok=True)
+        csv_path = os.path.join(save_dir, 'all_test_results.csv')
+        
+        with open(csv_path, 'w', newline='') as f:
+            fieldnames = ['index', 'image_path', 'true_label', 'predicted_label', 'anomaly_score', 'is_correct']
+            writer = csv.DictWriter(f, fieldnames=fieldnames)
+            writer.writeheader()
+            writer.writerows(all_results)
+        
+        # Also save misclassified images separately
+        misclassified = [r for r in all_results if not r['is_correct']]
+        if misclassified:
+            misclassified_csv_path = os.path.join(save_dir, 'misclassified_images.csv')
+            with open(misclassified_csv_path, 'w', newline='') as f:
+                writer = csv.DictWriter(f, fieldnames=fieldnames)
+                writer.writeheader()
+                writer.writerows(misclassified)
+        
+        accuracy = (len(labels_gt) - misclassified_count) / len(labels_gt) * 100
+        print(f"\n[Test Results] Total: {len(labels_gt)}, Correct: {len(labels_gt) - misclassified_count}, "
+              f"Misclassified: {misclassified_count}, Accuracy: {accuracy:.2f}%")
+        print(f"[Saved] All results: {csv_path}")
+        if misclassified:
+            print(f"[Saved] Misclassified only: {misclassified_csv_path}")
+
     def _embed(self, images, detach=True, provide_patch_shapes=False, evaluation=False):
         """Returns feature embeddings for images."""
         if not evaluation and self.train_backbone:
@@ -274,9 +325,9 @@ class GLASS(torch.nn.Module):
             update_state_dict()
 
             if (i_epoch + 1) % self.eval_epochs == 0:
-                images, scores, segmentations, labels_gt, masks_gt = self.predict(val_data)
+                images, scores, segmentations, labels_gt, masks_gt, img_paths = self.predict(val_data)
                 image_auroc, image_ap, pixel_auroc, pixel_ap, pixel_pro = self._evaluate(images, scores, segmentations,
-                                                                                         labels_gt, masks_gt, name)
+                                                                                         labels_gt, masks_gt, img_paths, name)
 
                 self.logger.logger.add_scalar("i-auroc", image_auroc, i_epoch)
                 self.logger.logger.add_scalar("i-ap", image_ap, i_epoch)
@@ -286,6 +337,10 @@ class GLASS(torch.nn.Module):
 
                 eval_path = './results/eval/' + name + '/'
                 train_path = './results/training/' + name + '/'
+                
+                # Handle nan values for pixel_auroc (treat as 0)
+                pixel_auroc_safe = 0 if np.isnan(pixel_auroc) else pixel_auroc
+                
                 if best_record is None:
                     best_record = [image_auroc, image_ap, pixel_auroc, pixel_ap, pixel_pro, i_epoch]
                     ckpt_path_best = os.path.join(self.ckpt_dir, "ckpt_best_{}.pth".format(i_epoch))
@@ -293,13 +348,15 @@ class GLASS(torch.nn.Module):
                     shutil.rmtree(eval_path, ignore_errors=True)
                     shutil.copytree(train_path, eval_path)
 
-                elif image_auroc + pixel_auroc > best_record[0] + best_record[2]:
-                    best_record = [image_auroc, image_ap, pixel_auroc, pixel_ap, pixel_pro, i_epoch]
-                    os.remove(ckpt_path_best)
-                    ckpt_path_best = os.path.join(self.ckpt_dir, "ckpt_best_{}.pth".format(i_epoch))
-                    torch.save(state_dict, ckpt_path_best)
-                    shutil.rmtree(eval_path, ignore_errors=True)
-                    shutil.copytree(train_path, eval_path)
+                else:
+                    best_pixel_auroc_safe = 0 if np.isnan(best_record[2]) else best_record[2]
+                    if image_auroc + pixel_auroc_safe > best_record[0] + best_pixel_auroc_safe:
+                        best_record = [image_auroc, image_ap, pixel_auroc, pixel_ap, pixel_pro, i_epoch]
+                        os.remove(ckpt_path_best)
+                        ckpt_path_best = os.path.join(self.ckpt_dir, "ckpt_best_{}.pth".format(i_epoch))
+                        torch.save(state_dict, ckpt_path_best)
+                        shutil.rmtree(eval_path, ignore_errors=True)
+                        shutil.copytree(train_path, eval_path)
 
                 pbar_str1 = f" IAUC:{round(image_auroc * 100, 2)}({round(best_record[0] * 100, 2)})" \
                             f" IAP:{round(image_ap * 100, 2)}({round(best_record[1] * 100, 2)})" \
@@ -481,9 +538,9 @@ class GLASS(torch.nn.Module):
             else:
                 self.load_state_dict(state_dict, strict=False)
 
-            images, scores, segmentations, labels_gt, masks_gt = self.predict(test_data)
+            images, scores, segmentations, labels_gt, masks_gt, img_paths = self.predict(test_data)
             image_auroc, image_ap, pixel_auroc, pixel_ap, pixel_pro = self._evaluate(images, scores, segmentations,
-                                                                                     labels_gt, masks_gt, name, path='eval')
+                                                                                     labels_gt, masks_gt, img_paths, name, path='eval')
             epoch = int(ckpt_path[0].split('_')[-1].split('.')[0])
         else:
             image_auroc, image_ap, pixel_auroc, pixel_ap, pixel_pro, epoch = 0., 0., 0., 0., 0., -1.
@@ -491,7 +548,7 @@ class GLASS(torch.nn.Module):
 
         return image_auroc, image_ap, pixel_auroc, pixel_ap, pixel_pro, epoch
 
-    def _evaluate(self, images, scores, segmentations, labels_gt, masks_gt, name, path='training'):
+    def _evaluate(self, images, scores, segmentations, labels_gt, masks_gt, img_paths, name, path='training'):
         scores = np.squeeze(np.array(scores))
         image_scores = metrics.compute_imagewise_retrieval_metrics(scores, labels_gt, path)
         image_auroc = image_scores["auroc"]
@@ -501,6 +558,9 @@ class GLASS(torch.nn.Module):
         if path == 'eval':
             roc_save_path = f'./results/roc_curves/{name}_image_roc.png'
             metrics.plot_roc_curve(scores, labels_gt, roc_save_path, dataset_name=name)
+            
+            # Save all test results
+            self._save_test_results(scores, labels_gt, img_paths, name)
 
         if len(masks_gt) > 0:
             segmentations = np.array(segmentations)
@@ -570,7 +630,7 @@ class GLASS(torch.nn.Module):
                     scores.append(score)
                     masks.append(mask)
 
-        return images, scores, masks, labels_gt, masks_gt
+        return images, scores, masks, labels_gt, masks_gt, img_paths
 
     def _predict(self, img):
         """Infer score and mask for a batch of images."""
