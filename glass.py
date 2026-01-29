@@ -757,7 +757,11 @@ class GLASS(torch.nn.Module):
         masks_gt = []
 
         with tqdm.tqdm(
-            test_dataloader, desc="Inferring...", leave=False, unit="batch"
+            test_dataloader,
+            desc="Inferring...",
+            leave=False,
+            unit="batch",
+            disable=True,
         ) as data_iterator:
             for data in data_iterator:
                 if isinstance(data, dict):
