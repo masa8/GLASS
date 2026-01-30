@@ -7,7 +7,7 @@ cd ..
 python main.py \
     --gpu 0 \
     --seed 0 \
-    --test ckpt \
+    --test test \
   net \
     -b wideresnet50 \
     -le layer2 \
