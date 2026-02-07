@@ -6,7 +6,7 @@ import logging
 import sys
 import click
 import warnings
-import GLASS.commands.net.utils as utils
+import utils
 
 from commands.dataset import dataset
 from commands.net import net
