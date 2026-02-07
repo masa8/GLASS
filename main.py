@@ -1,4 +1,5 @@
 from datetime import datetime
+from pathlib import Path
 
 import pandas as pd
 import os
@@ -6,10 +7,15 @@ import logging
 import sys
 import click
 import warnings
-import utils
 
-from commands.dataset import dataset
-from commands.net import net
+PROJECT_ROOT = Path(__file__).resolve().parent
+if str(PROJECT_ROOT) not in sys.path:
+    sys.path.append(str(PROJECT_ROOT))
+
+import utils  # noqa: E402
+
+from commands.dataset import dataset  # noqa: E402
+from commands.net import net  # noqa: E402
 
 
 @click.group(chain=True)
