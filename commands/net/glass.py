@@ -1,8 +1,7 @@
-from loss import FocalLoss
+from GLASS.commands.net.loss import FocalLoss
 from collections import OrderedDict
-from torchvision import transforms
 from torch.utils.tensorboard import SummaryWriter
-from model import Discriminator, Projection, PatchMaker
+from GLASS.commands.net.model import Discriminator, Projection, PatchMaker
 
 import numpy as np
 import pandas as pd
@@ -13,10 +12,10 @@ import os
 import math
 import torch
 import tqdm
-import common
-import metrics
+import GLASS.commands.net.common as common
+import GLASS.commands.net.metrics as metrics
 import cv2
-import utils
+import GLASS.commands.net.utils as utils
 import glob
 import shutil
 
@@ -309,7 +308,7 @@ class GLASS(torch.nn.Module):
                 self.distribution = 0
                 df = pd.read_excel(xlsx_path)
                 self.svd = df.loc[df["Class"] == name, "Distribution"].values[0]
-        except:
+        except Exception:
             self.distribution = 1
             self.svd = 1
 
@@ -588,11 +587,11 @@ class GLASS(torch.nn.Module):
                 (mask_s_gt == 1).sum() + gaus_scores.shape[0]
             )
 
-            self.logger.logger.add_scalar(f"p_true", p_true, self.logger.g_iter)
-            self.logger.logger.add_scalar(f"p_fake", p_fake, self.logger.g_iter)
-            self.logger.logger.add_scalar(f"r_t", r_t, self.logger.g_iter)
-            self.logger.logger.add_scalar(f"r_g", r_g, self.logger.g_iter)
-            self.logger.logger.add_scalar(f"r_f", r_f, self.logger.g_iter)
+            self.logger.logger.add_scalar("p_true", p_true, self.logger.g_iter)
+            self.logger.logger.add_scalar("p_fake", p_fake, self.logger.g_iter)
+            self.logger.logger.add_scalar("r_t", r_t, self.logger.g_iter)
+            self.logger.logger.add_scalar("r_g", r_g, self.logger.g_iter)
+            self.logger.logger.add_scalar("r_f", r_f, self.logger.g_iter)
             self.logger.logger.add_scalar("loss", loss, self.logger.g_iter)
             self.logger.step()
 
@@ -714,7 +713,7 @@ class GLASS(torch.nn.Module):
                         pixel_roc_save_path,
                         dataset_name=f"{name} (Pixel-level)",
                     )
-                except:
+                except Exception:
                     pixel_pro = 0.0
             else:
                 pixel_pro = 0.0

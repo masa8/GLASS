@@ -1,5 +1,5 @@
-import torchvision.models as models
-import timm
+import torchvision.models as models  # noqa: F401
+import timm  # noqa: F401
 
 _BACKBONES = {
     "alexnet": "models.alexnet(pretrained=True)",

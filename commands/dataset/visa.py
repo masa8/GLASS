@@ -1,5 +1,5 @@
 from torchvision import transforms
-from perlin import perlin_mask
+from GLASS.commands.dataset.perlin import perlin_mask
 from enum import Enum
 
 import numpy as np

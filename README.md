@@ -1,4 +1,5 @@
 # GLASS
+Global & Local Anomaly co-Synthesis Strategy.
 - https://arxiv.org/abs/2407.09359
 
 GLASS is an anomaly detection method that learns only normal images and then generates gradient-ascent–controlled pseudo anomalies at both the feature level (Global) and the image level (Local), enabling the model to learn and detect even subtle, hard-to-distinguish defects.
