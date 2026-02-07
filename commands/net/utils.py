@@ -48,7 +48,7 @@ def distribution_judge(img, name):
     l2_density = points_num / (np.sum(l2_dist_all <= radius) + 1e-10)
     flag = 1 if (l1_density > 0.21 or l2_density > 0.21) and radius > 12 and points_num > 60 else 0
     type = 'Maniflod' if flag == 0 else 'HyperSphere'
-    print(f'Distribution: {flag} / {type}.')
+    print(f'Distribution: {flag} / {type}.: L1 density: {l1_density:.4f}, L2 density: {l2_density:.4f}, Radius: {radius:.2f}, Points num: {points_num}')
 
     output_path = './results/judge/fft/' + str(flag) + '/' + name + '.png'
     img_up = np.hstack([img_, np.repeat(magnitude, 3).reshape((height, width, 3))])
