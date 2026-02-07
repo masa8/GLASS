@@ -27,7 +27,7 @@ python main.py \
     --step 5 \
     --limit 392 \
   dataset \
-    --distribution 0 \
+    --distribution 1 \
     --mean 0.5 \
     --std 0.1 \
     --fg 0 \
