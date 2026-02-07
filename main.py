@@ -9,10 +9,14 @@ import click
 import warnings
 
 PROJECT_ROOT = Path(__file__).resolve().parent
-if str(PROJECT_ROOT) not in sys.path:
-    sys.path.append(str(PROJECT_ROOT))
+PROJECT_PARENT = PROJECT_ROOT.parent
 
-import utils  # noqa: E402
+for path in (PROJECT_ROOT, PROJECT_PARENT):
+    path_str = str(path)
+    if path_str not in sys.path:
+        sys.path.insert(0, path_str)
+
+from commands.net import utils  # noqa: E402
 
 from commands.dataset import dataset  # noqa: E402
 from commands.net import net  # noqa: E402

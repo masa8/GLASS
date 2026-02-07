@@ -1,7 +1,7 @@
-from GLASS.commands.net.loss import FocalLoss
+from .loss import FocalLoss
 from collections import OrderedDict
 from torch.utils.tensorboard import SummaryWriter
-from GLASS.commands.net.model import Discriminator, Projection, PatchMaker
+from .model import Discriminator, Projection, PatchMaker
 
 import numpy as np
 import pandas as pd
@@ -12,10 +12,10 @@ import os
 import math
 import torch
 import tqdm
-import GLASS.commands.net.common as common
-import GLASS.commands.net.metrics as metrics
+from . import common
+from . import metrics
 import cv2
-import GLASS.commands.net.utils as utils
+from . import utils
 import glob
 import shutil
 
