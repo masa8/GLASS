@@ -17,7 +17,7 @@ def visualize_feature_distribution(all_features, center, name, epoch):
         all_features: list of torch.Tensor - 全バッチの特徴量リスト
         center: torch.Tensor - 特徴量の中心点
         name: str - カテゴリ名
-        epoch: int - エポック番号
+        epoch: int or str - エポック番号または"test"などの文字列
     """
     # 全特徴量を結合
     all_features = torch.cat(all_features, dim=0).numpy()  # (N, feature_dim)
@@ -104,7 +104,9 @@ def visualize_feature_distribution(all_features, center, name, epoch):
     # 保存
     save_dir = f"./results/feature_distribution/{name}"
     os.makedirs(save_dir, exist_ok=True)
-    save_path = os.path.join(save_dir, f"epoch_{epoch:04d}.png")
+    # epochが数値の場合は4桁でゼロパディング、文字列の場合はそのまま使用
+    epoch_str = f"{epoch:04d}" if isinstance(epoch, int) else str(epoch)
+    save_path = os.path.join(save_dir, f"epoch_{epoch_str}.png")
     plt.savefig(save_path, dpi=150, bbox_inches="tight")
     plt.close()
 
@@ -118,7 +120,7 @@ def visualize_tsne_distribution(all_features, center, name, epoch):
         all_features: list of torch.Tensor - 全バッチの特徴量リスト
         center: torch.Tensor - 特徴量の中心点
         name: str - カテゴリ名
-        epoch: int - エポック番号
+        epoch: int or str - エポック番号または"test"などの文字列
     """
     from sklearn.manifold import TSNE
 
@@ -155,7 +157,9 @@ def visualize_tsne_distribution(all_features, center, name, epoch):
     # 保存
     save_dir = f"./results/feature_distribution_tsne/{name}"
     os.makedirs(save_dir, exist_ok=True)
-    save_path = os.path.join(save_dir, f"epoch_{epoch:04d}.png")
+    # epochが数値の場合は4桁でゼロパディング、文字列の場合はそのまま使用
+    epoch_str = f"{epoch:04d}" if isinstance(epoch, int) else str(epoch)
+    save_path = os.path.join(save_dir, f"epoch_{epoch_str}.png")
     plt.savefig(save_path, dpi=150, bbox_inches="tight")
     plt.close()
 

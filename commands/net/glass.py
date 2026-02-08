@@ -359,7 +359,7 @@ class GLASS(torch.nn.Module):
                     else:
                         self.c += batch_mean
 
-                    # 特徴量を保存（パッチ単位で平均を取る）
+                    # 特徴量を保存（バッチ単位で平均を取る）
                     batch_features = torch.mean(outputs, dim=1)  # (batch, feature_dim)
                     all_features.append(batch_features.cpu())
 
@@ -650,7 +650,7 @@ class GLASS(torch.nn.Module):
 
         return pbar_str2, all_p_true_, all_p_fake_
 
-    def tester(self, test_data, name):
+    def tester(self, test_data, name, training_data=None):
         ckpt_path = glob.glob(self.ckpt_dir + "/ckpt_best*")
         if len(ckpt_path) != 0:
             state_dict = torch.load(ckpt_path[0], map_location=self.device)
@@ -660,6 +660,44 @@ class GLASS(torch.nn.Module):
                     self.pre_projection.load_state_dict(state_dict["pre_projection"])
             else:
                 self.load_state_dict(state_dict, strict=False)
+
+            # Visualize training data features if provided
+            if training_data is not None:
+                self.forward_modules.eval()
+                all_features = []
+                with torch.no_grad():
+                    for i, data in enumerate(training_data):
+                        img = data["image"]
+                        img = img.to(torch.float).to(self.device)
+                        if self.pre_proj > 0:
+                            outputs = self.pre_projection(
+                                self._embed(img, evaluation=False)[0]
+                            )
+                            outputs = outputs[0] if len(outputs) == 2 else outputs
+                        else:
+                            outputs = self._embed(img, evaluation=False)[0]
+                        outputs = outputs[0] if len(outputs) == 2 else outputs
+                        outputs = outputs.reshape(img.shape[0], -1, outputs.shape[-1])
+
+                        batch_mean = torch.mean(outputs, dim=0)
+                        if i == 0:
+                            center = batch_mean
+                        else:
+                            center += batch_mean
+
+                        # Save features
+                        batch_features = torch.mean(outputs, dim=1)
+                        all_features.append(batch_features.cpu())
+
+                    center /= len(training_data)
+
+                # Visualize features (test phase)
+                visualize.visualize_feature_distribution(
+                    all_features, center, name, epoch="test"
+                )
+                visualize.visualize_tsne_distribution(
+                    all_features, center, name, epoch="test"
+                )
 
             images, scores, segmentations, labels_gt, masks_gt, img_paths = (
                 self.predict(test_data)

@@ -99,7 +99,7 @@ def run(
 
             if not isinstance(flag, int):
                 i_auroc, i_ap, p_auroc, p_ap, p_pro, epoch = GLASS.tester(
-                    dataloaders["testing"], dataset_name
+                    dataloaders["testing"], dataset_name, dataloaders["training"]
                 )
                 result_collect.append(
                     {
