@@ -2,6 +2,7 @@ from .loss import FocalLoss
 from collections import OrderedDict
 from torch.utils.tensorboard import SummaryWriter
 from .model import Discriminator, Projection, PatchMaker
+from . import visualize
 
 import numpy as np
 import pandas as pd
@@ -337,6 +338,7 @@ class GLASS(torch.nn.Module):
         best_record = None
         for i_epoch in pbar:
             self.forward_modules.eval()
+            all_features = []  # 特徴量を保存
             with torch.no_grad():  # compute center
                 for i, data in enumerate(training_data):
                     img = data["image"]
@@ -356,7 +358,28 @@ class GLASS(torch.nn.Module):
                         self.c = batch_mean
                     else:
                         self.c += batch_mean
-                self.c /= len(training_data)
+
+                    # 特徴量を保存（パッチ単位で平均を取る）
+                    batch_features = torch.mean(outputs, dim=1)  # (batch, feature_dim)
+                    all_features.append(batch_features.cpu())
+
+            self.c /= len(training_data)
+
+            # 特徴量分布の可視化
+            if (i_epoch + 1) % self.eval_epochs == 0:
+                # PCA可視化
+                visualize.visualize_feature_distribution(
+                    all_features, self.c, name, i_epoch
+                )
+                # t-SNE可視化（10エポックごと、または最終エポック）
+                if (
+                    i_epoch == 0
+                    or (i_epoch + 1) % 10 == 0
+                    or i_epoch == self.meta_epochs - 1
+                ):
+                    visualize.visualize_tsne_distribution(
+                        all_features, self.c, name, i_epoch
+                    )
 
             pbar_str, pt, pf = self._train_discriminator(
                 training_data, i_epoch, pbar, pbar_str1
