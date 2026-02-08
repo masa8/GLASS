@@ -702,6 +702,12 @@ class GLASS(torch.nn.Module):
             images, scores, segmentations, labels_gt, masks_gt, img_paths = (
                 self.predict(test_data)
             )
+            
+            # Visualize anomaly score histogram
+            scores_array = np.squeeze(np.array(scores))
+            labels_array = np.array(labels_gt)
+            visualize.visualize_anomaly_score_histogram(scores_array, labels_array, name)
+            
             image_auroc, image_ap, pixel_auroc, pixel_ap, pixel_pro = self._evaluate(
                 images,
                 scores,

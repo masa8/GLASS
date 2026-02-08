@@ -164,3 +164,108 @@ def visualize_tsne_distribution(all_features, center, name, epoch):
     plt.close()
 
     LOGGER.info(f"t-SNE distribution saved: {save_path}")
+
+
+def visualize_anomaly_score_histogram(scores, labels_gt, name):
+    """異常スコアのヒストグラムを可視化（正常と異常を別々の線で表示）
+
+    Args:
+        scores: np.ndarray - 異常スコア (N,)
+        labels_gt: np.ndarray - 正解ラベル (N,) 0=正常, 1=異常
+        name: str - カテゴリ名
+    """
+    # 正常と異常に分離
+    normal_scores = scores[labels_gt == 0]
+    anomaly_scores = scores[labels_gt == 1]
+
+    # 可視化
+    fig, ax = plt.subplots(figsize=(12, 6))
+
+    # ヒストグラムのビン数を自動調整（データ数に応じて）
+    bins = min(50, max(20, len(scores) // 10))
+
+    # 正常サンプルのヒストグラム（緑色の線）
+    if len(normal_scores) > 0:
+        ax.hist(
+            normal_scores,
+            bins=bins,
+            alpha=0.6,
+            color="green",
+            edgecolor="darkgreen",
+            label=f"Normal (n={len(normal_scores)})",
+            histtype="step",
+            linewidth=2,
+        )
+        ax.hist(
+            normal_scores,
+            bins=bins,
+            alpha=0.3,
+            color="green",
+        )
+
+    # 異常サンプルのヒストグラム（赤色の線）
+    if len(anomaly_scores) > 0:
+        ax.hist(
+            anomaly_scores,
+            bins=bins,
+            alpha=0.6,
+            color="red",
+            edgecolor="darkred",
+            label=f"Anomaly (n={len(anomaly_scores)})",
+            histtype="step",
+            linewidth=2,
+        )
+        ax.hist(
+            anomaly_scores,
+            bins=bins,
+            alpha=0.3,
+            color="red",
+        )
+
+    # 統計情報を追加
+    stats_text = ""
+    if len(normal_scores) > 0:
+        stats_text += "Normal:\n"
+        stats_text += f"  Mean: {normal_scores.mean():.4f}\n"
+        stats_text += f"  Std: {normal_scores.std():.4f}\n"
+        stats_text += f"  Min: {normal_scores.min():.4f}\n"
+        stats_text += f"  Max: {normal_scores.max():.4f}\n"
+
+    if len(anomaly_scores) > 0:
+        if stats_text:
+            stats_text += "\n"
+        stats_text += "Anomaly:\n"
+        stats_text += f"  Mean: {anomaly_scores.mean():.4f}\n"
+        stats_text += f"  Std: {anomaly_scores.std():.4f}\n"
+        stats_text += f"  Min: {anomaly_scores.min():.4f}\n"
+        stats_text += f"  Max: {anomaly_scores.max():.4f}"
+
+    # 統計情報のテキストボックス
+    ax.text(
+        0.98,
+        0.98,
+        stats_text,
+        transform=ax.transAxes,
+        verticalalignment="top",
+        horizontalalignment="right",
+        bbox=dict(boxstyle="round", facecolor="wheat", alpha=0.8),
+        fontsize=9,
+        family="monospace",
+    )
+
+    ax.set_xlabel("Anomaly Score", fontsize=12)
+    ax.set_ylabel("Frequency", fontsize=12)
+    ax.set_title(f"Anomaly Score Distribution - {name}", fontsize=14, fontweight="bold")
+    ax.legend(loc="upper left", fontsize=11)
+    ax.grid(True, alpha=0.3, linestyle="--")
+
+    plt.tight_layout()
+
+    # 保存
+    save_dir = f"./results/anomaly_score_histogram/{name}"
+    os.makedirs(save_dir, exist_ok=True)
+    save_path = os.path.join(save_dir, "test_score_histogram.png")
+    plt.savefig(save_path, dpi=150, bbox_inches="tight")
+    plt.close()
+
+    LOGGER.info(f"Anomaly score histogram saved: {save_path}")
